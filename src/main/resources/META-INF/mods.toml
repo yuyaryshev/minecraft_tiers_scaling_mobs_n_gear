@@ -1,4 +1,4 @@
-# This is an example mods.toml file. It contains the data relating to the loading mods.
+# This is an mods.toml file. It contains the data relating to the loading mods.
 # There are several mandatory fields (#mandatory), and many more that are optional (#optional).
 # The overall format is standard TOML format, v0.5.0.
 # Note that there are a couple of TOML lists in this file.
@@ -11,7 +11,7 @@ loaderVersion="${loader_version_range}" #mandatory This is typically bumped ever
 # Review your options at https://choosealicense.com/. All rights reserved is the default copyright stance, and is thus the default here.
 license="${mod_license}"
 # A URL to refer people to when problems occur with this mod
-#issueTrackerURL="https://change.me.to.your.issue.tracker.example.invalid/" #optional
+issueTrackerURL="https://github.com/yuyaryshev/minecraft_tier_scaling_mobs_n_gear/issues"
 # A list of mods - how many allowed here is determined by the individual mod loader
 [[mods]] #mandatory
 # The modid of the mod
@@ -63,8 +63,8 @@ description='''${mod_description}'''
     ordering="NONE"
     side="BOTH"
 
-# Features are specific properties of the game environment, that you may want to declare you require. This example declares
+# Features are specific properties of the game environment, that you may want to declare you require. This exampl e declares
 # that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't
-# stop your mod loading on the server for example.
+# stop your mod loading on the server for exampl e.
 #[features.${mod_id}]
 #openGLVersion="[3.2,)"
