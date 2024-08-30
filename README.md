@@ -1,2 +1,13 @@
-# minecraft_tier_scaling_mobs_n_gear
-The aim of this mod: assign tiers to mobs, weapons and armors. Than choose multipliers between tiers, to scale damage and health.
+# tierscaling
+
+A tiny mod for minecraft that pushes all players to survival.
+
+You can use command /tierscaling to toggle this protection.
+
+Syntax:
+
+/tierscaling true/false PlayerName
+
+true - forbids all modes except for survival
+
+false - allows all modes.
