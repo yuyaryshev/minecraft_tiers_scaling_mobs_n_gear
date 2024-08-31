@@ -61,7 +61,6 @@ public class CommonClass {
         // Так вот функция линеаризации должна перейти от значения tier ко второму значению - линеаризованному tier.
         //
 
-
         return tier;
     }
 
@@ -99,6 +98,11 @@ public class CommonClass {
 
         // TODO Тут нужна более сложная логика, поскольку существуют предметы из модов, которые не подпадают под ванильные tier'ы
         return item.getTier().getLevel();
+    }
+
+    public static float getDamageRespectingTiers(float attackerLinearTier, float victimLinearTier, float damage, float armor, float toughness) {
+        // TODO тут нужно описать формулу расчета дамага с учетом разницы в tier'ах
+        return 0f;
     }
 
     public static void onPlayerTick(Player player) {
