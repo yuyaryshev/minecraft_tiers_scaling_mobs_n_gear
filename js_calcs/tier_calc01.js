@@ -9,31 +9,32 @@ const rr = [
 
 console.log(`CODE00000000 rr=${rr}`);
 
-//tierHp, tierArmor, tierToughness, tierEnchantability, tierId
+//tierHp, tierArmor, tierToughness, tierEnchantability, tierAttack, tierId
 const initialTiers = `
-    10       0              0              1              wood
-    14       1              0              1              stone
-    18       2              1              1              copper
-    25       3              1              2              chainmail
-    30       2              1              5              gold
-    40       4              2              3              iron
-    45       3              2              4              brass
-    80       6              4              6              diamond
-   120       8              9             12              netherite
+    10       0              0              1            1  wood
+    14       1              0              1            2  stone
+    19       2              1              1            3  copper
+    25       3              1              2            3  chainmail
+    30       2              1              5            3  gold
+    40       4              2              3            6  iron
+    45       3              2              4            4  brass
+    80       6              4              6            8  diamond
+   120       8              9             12            10  netherite
 `
   .split("\n")
   .map((s) => s.trim())
   .filter((s) => s.length)
   .map((s, tierIndex) => {
-    const [tierHp, tierArmor, tierToughness, tierEnchantability, tierId] = s
+    const [tierHp, tierArmor, tierToughness, tierEnchantability, tierAttack, tierId] = s
       .split(/\s+/)
-      .map((v, colIndex) => ([4].includes(colIndex) ? v : +v)); // Convert to numbers all except column 4
+      .map((v, colIndex) => ([5].includes(colIndex) ? v : +v)); // Convert to numbers all except column 4
     return {
       tierIndex,
       tierHp,
       tierArmor,
       tierToughness,
       tierEnchantability,
+      tierAttack,
       tierId,
     };
   });
@@ -48,6 +49,8 @@ const globals = {
   maxArmorPiecesCount,
   maxArmor, // Maximum number armor can be. Used for even distribution of armor points.
   minDamageRatioAfterArmorReduction: 0.2, // Minimal part of damage that passes to victim if the damage passed reduction
+  playerBaseHp: 10,
+  playerBaseDamage: 1,
 };
 
 console.log(`CODE00000011 globals=`, JSON5.stringify(globals, undefined, 4));
@@ -83,10 +86,11 @@ function calculateTier(tier) {
     tierArmor,
     tierToughness,
     tierEnchantability,
+    tierAttack,
     tierId,
   } = tier;
 
-  const tierHpBonus = 0;
+
   // finalDamage = max(0, (initialDamage-t)*max(b, 1-a*(1-b)/M))
   // finalDamage = (initialDamage-t)*max(b, 1-a*(1-b)/M)
   // finalDamage / (1-playerArmor*(1-globals.minDamageRatioAfterArmorReduction)/globals.maxArmor) + playerDamageReduction = initialDamage
@@ -102,6 +106,9 @@ function calculateTier(tier) {
       playerDamageReduction,
     ),
   );
+  const playerHpBonus = roundTo1Digit(playerHp - globals.playerBaseHp);
+  const playerWeaponAttack = 0;
+
   const playerAvgMeleeDamage = roundTo1Digit(
     getDhpEquivalentToByArmor(
       playerHpEquivalentToArmor,
@@ -110,12 +117,15 @@ function calculateTier(tier) {
     ),
   );
 
-  // TODO у игрока и у моба разный базовый дамаг! (Базовая атака) Нужно это учесть. Это сильно повлияет на значения
+  // TODO у игрока и у моба может/должен быть разный базовый дамаг! (Базовая атака) Нужно это учесть. Это сильно повлияет на значения
+  //
 
+
+
+  const mobHpEquivalentToArmor = (globals.playerBaseDamage + tierAttack)*globals.avgPlayerMeleeHitsToKillMob; // TODO вот тут должно быть оружие игрока! И его дамаг, а не вот так как есть сейчас
   const mobArmor = tierArmor * maxArmorPiecesCount;
   const mobArmorKoeff = getArmorKoeff(mobArmor);
   const mobDamageReduction = tierToughness * maxArmorPiecesCount;
-  const mobHpEquivalentToArmor = tierHp;
   const mobHp = roundTo1Digit(
     getDhpReducedByArmor(mobHpEquivalentToArmor, mobArmor, mobDamageReduction),
   );
@@ -127,7 +137,27 @@ function calculateTier(tier) {
     ),
   );
 
-  return { ...tier, tierHpBonus, playerHp, mobAvgMeleeDamage, mobArmor, mobHp };
+
+
+  return {
+    ti:tierIndex,
+    thp:tierHp,
+    ta:tierArmor,
+    tt:tierToughness,
+    te:tierEnchantability,
+    tatk:tierAttack,
+    tid:tierId,
+
+    pa:playerArmor,
+    pdr:playerDamageReduction,
+    phpa:playerHpEquivalentToArmor,
+    php:playerHp,
+    phpb:playerHpBonus,
+
+    md:mobAvgMeleeDamage,
+    ma:mobArmor,
+    mhp:mobHp
+  };
 }
 const tiers = initialTiers.map(calculateTier);
 
