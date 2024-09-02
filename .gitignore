@@ -21,3 +21,4 @@ build
 # other
 eclipse
 run
+node_modules
