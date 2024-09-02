@@ -1,16 +1,16 @@
-const JSON5 = require("json5");
+//const JSON5 = require("json5");
 
 //tierHp, tierArmor, tierToughness, tierEnchantability, tierAttack, tierId
 const initialTiers = `
-    10       0              0              1            1  wood
-    14       1              0              1            2  stone
-    19       2              1              1            3  copper
-    25       3              1              2            3  chainmail
-    30       2              1              5            3  gold
-    40       4              2              3            6  iron
-    45       3              2              4            4  brass
-    80       6              4              6            8  diamond
-   120       8              9             12            10  netherite
+    10       0              0              1            1                wood
+    14       1              0              1            2                stone
+    19       2              1              1            3                copper
+    25       3              1              2            3                chainmail
+    30       2              1              5            3                gold
+    40       4              2              3            6                iron
+    45       3              2              4            4                brass
+    80       6              4              6            8                diamond
+   120       8              9             12            10               netherite
 `
   .split("\n")
   .map((s) => s.trim())
@@ -40,7 +40,7 @@ const maxArmor =
   initialTiers[initialTiers.length - 1].tierArmor * maxArmorPiecesCount;
 
 const globals = {
-  avgMobMeleeHitsToKillPlayer: 5, // How many times on averege should a mob of the same tier hit player to kill him. Used in mob damage calculation.
+  avgMobMeleeHitsToKillPlayer: 6, // How many times on averege should a mob of the same tier hit player to kill him. Used in mob damage calculation.
   avgPlayerMeleeHitsToKillMob: 5, // How many times on averege should player hit mob of the same tier hit player to kill it. Used in player's weapon damage calculation.
   maxArmorPiecesCount,
   maxArmor, // Maximum number armor can be. Used for even distribution of armor points.
@@ -49,7 +49,7 @@ const globals = {
   playerBaseDamage: 1,
 };
 
-console.log(`CODE00000011 globals=`, JSON5.stringify(globals, undefined, 4));
+console.log(`CODE00000011 globals=`, globals, undefined, 4);
 
 console.log(`CODE00000001 initialTiers=`);
 console.table(initialTiers);
