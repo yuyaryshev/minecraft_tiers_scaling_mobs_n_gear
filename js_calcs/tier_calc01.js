@@ -65,13 +65,14 @@ function getArmorKoeff(armor) {
   );
 }
 
-// Returns dhp after the damage is reduced by armor (dhp = damagepoints or hitpoints)
+// Returns dhp after the damage is reduced by armor (dhp = damagepoints or hitpoints). baseDhp -> reducedDhp
 function getDhpReducedByArmor(baseDhp, armor, reduction) {
-  return (baseDhp - reduction) * getArmorKoeff(armor);
+  return Math.max(0, (baseDhp - reduction) * getArmorKoeff(armor));
 }
 
-// Returns dhp that would be equivalent to wearing armor (dhp = damagepoints or hitpoints)
+// Returns dhp that would be equivalent to wearing armor (dhp = damagepoints or hitpoints). reducedDhp -> baseDhp
 function getDhpEquivalentToByArmor(reducedDhp, armor, reduction) {
+  // This is just an inverted function getDhpReducedByArmor
   return reducedDhp / getArmorKoeff(armor) + reduction;
 }
 
@@ -113,7 +114,6 @@ function calculateTier(tier) {
   );
 
   // TODO у игрока и у моба может/должен быть разный базовый дамаг! (Базовая атака) Нужно это учесть. Это сильно повлияет на значения
-  //
 
   const mobHpEquivalentToArmor =
     (globals.playerBaseDamage + playerWeaponAttack) *
