@@ -1,14 +1,5 @@
 const JSON5 = require("json5");
 
-const dmgFunc1 = (d, a) => d / (1 + a);
-const rr = [
-  dmgFunc1(10, 1),
-  dmgFunc1(10, 2) - dmgFunc1(10, 1),
-  dmgFunc1(10, 3) - dmgFunc1(10, 2),
-];
-
-console.log(`CODE00000000 rr=${rr}`);
-
 //tierHp, tierArmor, tierToughness, tierEnchantability, tierAttack, tierId
 const initialTiers = `
     10       0              0              1            1  wood
@@ -25,9 +16,14 @@ const initialTiers = `
   .map((s) => s.trim())
   .filter((s) => s.length)
   .map((s, tierIndex) => {
-    const [tierHp, tierArmor, tierToughness, tierEnchantability, tierAttack, tierId] = s
-      .split(/\s+/)
-      .map((v, colIndex) => ([5].includes(colIndex) ? v : +v)); // Convert to numbers all except column 4
+    const [
+      tierHp,
+      tierArmor,
+      tierToughness,
+      tierEnchantability,
+      tierAttack,
+      tierId,
+    ] = s.split(/\s+/).map((v, colIndex) => ([5].includes(colIndex) ? v : +v)); // Convert to numbers all except column 4
     return {
       tierIndex,
       tierHp,
@@ -90,7 +86,6 @@ function calculateTier(tier) {
     tierId,
   } = tier;
 
-
   // finalDamage = max(0, (initialDamage-t)*max(b, 1-a*(1-b)/M))
   // finalDamage = (initialDamage-t)*max(b, 1-a*(1-b)/M)
   // finalDamage / (1-playerArmor*(1-globals.minDamageRatioAfterArmorReduction)/globals.maxArmor) + playerDamageReduction = initialDamage
@@ -107,7 +102,7 @@ function calculateTier(tier) {
     ),
   );
   const playerHpBonus = roundTo1Digit(playerHp - globals.playerBaseHp);
-  const playerWeaponAttack = 0;
+  const playerWeaponAttack = tierAttack;
 
   const playerAvgMeleeDamage = roundTo1Digit(
     getDhpEquivalentToByArmor(
@@ -120,9 +115,9 @@ function calculateTier(tier) {
   // TODO у игрока и у моба может/должен быть разный базовый дамаг! (Базовая атака) Нужно это учесть. Это сильно повлияет на значения
   //
 
-
-
-  const mobHpEquivalentToArmor = (globals.playerBaseDamage + tierAttack)*globals.avgPlayerMeleeHitsToKillMob; // TODO вот тут должно быть оружие игрока! И его дамаг, а не вот так как есть сейчас
+  const mobHpEquivalentToArmor =
+    (globals.playerBaseDamage + playerWeaponAttack) *
+    globals.avgPlayerMeleeHitsToKillMob; // TODO вот тут должно быть оружие игрока! И его дамаг, а не вот так как есть сейчас
   const mobArmor = tierArmor * maxArmorPiecesCount;
   const mobArmorKoeff = getArmorKoeff(mobArmor);
   const mobDamageReduction = tierToughness * maxArmorPiecesCount;
@@ -137,34 +132,118 @@ function calculateTier(tier) {
     ),
   );
 
-
-
   return {
-    ti:tierIndex,
-    thp:tierHp,
-    ta:tierArmor,
-    tt:tierToughness,
-    te:tierEnchantability,
-    tatk:tierAttack,
-    tid:tierId,
+    tierIndex,
+    tierHp,
+    tierArmor,
+    tierToughness,
+    tierEnchantability,
+    tierAttack,
+    tierId,
 
-    pa:playerArmor,
-    pdr:playerDamageReduction,
-    phpa:playerHpEquivalentToArmor,
-    php:playerHp,
-    phpb:playerHpBonus,
+    playerArmor,
+    playerDamageReduction,
+    playerHpEquivalentToArmor,
+    playerHp,
+    playerHpBonus,
+    playerWeaponAttack,
 
-    md:mobAvgMeleeDamage,
-    ma:mobArmor,
-    mhp:mobHp
+    mobAvgMeleeDamage,
+    mobArmor,
+    mobDamageReduction,
+    mobHp,
   };
 }
+
+function tierShortForm(t) {
+  return {
+    ti: t.tierIndex,
+    thp: t.tierHp,
+    ta: t.tierArmor,
+    tt: t.tierToughness,
+    te: t.tierEnchantability,
+    tatk: t.tierAttack,
+    tid: t.tierId,
+
+    pa: t.playerArmor,
+    pdr: t.playerDamageReduction,
+    phpa: t.playerHpEquivalentToArmor,
+    php: t.playerHp,
+    phpb: t.playerHpBonus,
+    pwa: t.playerWeaponAttack,
+
+    md: t.mobAvgMeleeDamage,
+    ma: t.mobArmor,
+    mhp: t.mobHp,
+  };
+}
+
 const tiers = initialTiers.map(calculateTier);
 
 console.log(`CODE00000002 tiers=`);
-console.table(tiers);
+console.table(tiers.map(tierShortForm));
+// console.table(tiers.filter((i) => i.tierId === "diamond").map(tierShortForm));
 console.log(`CODE00000099 finished.`);
 
 // console.log(`CODE00000001 tiers=`, tiers);
 
 // Original formula: max(armor/5, armor - damage/ (2+toughness/4)) / 25
+
+function battleSimEx(php, pwa, pa, prd, mhp, md, ma, mrd) {
+  console.log(`CODE00010001 Battle sim start.`);
+  const pdelta = roundTo1Digit(getDhpReducedByArmor(md, pa, prd));
+  const pd = globals.playerBaseDamage + pwa;
+  const mdelta = roundTo1Digit(getDhpReducedByArmor(pd, ma, mrd));
+  const pturns_to_die = roundTo1Digit(php / pdelta);
+  const mturns_to_die = roundTo1Digit(mhp / mdelta);
+  const result = pturns_to_die > mturns_to_die ? "player wins" : "mob wins";
+
+  return {
+    txt: "",
+    php,
+    pwa,
+    pa,
+    prd,
+    pdelta,
+    pturns_to_die,
+    mhp,
+    md,
+    ma,
+    mrd,
+    mdelta,
+    mturns_to_die,
+    result,
+  };
+}
+
+function battleSim(ptier, mtier) {
+  if (typeof ptier === "string") {
+    ptier = tiers.filter((i) => i.tierId === ptier)[0];
+  }
+  if (typeof mtier === "string") {
+    mtier = tiers.filter((i) => i.tierId === mtier)[0];
+  }
+  const r = battleSimEx(
+    ptier.playerHp,
+    ptier.playerWeaponAttack,
+    ptier.playerArmor,
+    ptier.playerDamageReduction,
+    mtier.mobHp,
+    mtier.mobAvgMeleeDamage,
+    mtier.mobArmor,
+    mtier.mobDamageReduction,
+  );
+  r.txt = `${ptier.tierId} player vs ${mtier.tierId} mob`;
+  return r;
+}
+
+const battleLogs = [];
+
+battleLogs.push(...tiers.map((t) => battleSim(t, t)));
+battleLogs.push(battleSim("iron", "diamond"));
+battleLogs.push(battleSim("diamond", "iron"));
+battleLogs.push(battleSim("copper", "diamond"));
+battleLogs.push(battleSim("diamond", "copper"));
+
+console.log(`CODE00020001 battleLogs=`);
+console.table(battleLogs);
