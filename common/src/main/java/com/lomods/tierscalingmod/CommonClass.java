@@ -2,6 +2,7 @@ package com.lomods.tierscalingmod;
 
 import com.lomods.tierscalingmod.platform.Services;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -48,7 +49,7 @@ public class CommonClass {
         // Допустим есть tier'ы, например: 1 wood, 2 stone, 3 copper, 4 iron, 5 diamond, 6 netherite
         //
         //
-        // И вот допустим мы хотим чтобы
+        // i вот допустим мы хотим чтобы
         // - stone от wood отличался чуть чуть
         // - а вот diamond от iron отличался в два раза
         //
@@ -109,6 +110,7 @@ public class CommonClass {
         // Only run on the server side
         if (!player.level().isClientSide && player instanceof ServerPlayer) {
             ServerPlayer serverPlayer = (ServerPlayer) player;
+
 
             // Check if the player is in the toggle map and if the behavior is enabled
             if (playerToggleMap.getOrDefault(serverPlayer.getUUID(), true)) {

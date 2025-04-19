@@ -34,5 +34,6 @@ public class TierScalingMod {
     public void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         TierScalingCommand.register(dispatcher);
+        AngelicModeCommand.register(dispatcher);
     }
 }

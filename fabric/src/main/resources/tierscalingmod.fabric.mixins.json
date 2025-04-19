@@ -5,7 +5,13 @@
     "refmap": "${mod_id}.refmap.json",
     "compatibilityLevel": "JAVA_17",
     "mixins": [
-        "LivingEntityMixin", "CombatRulesMixin","MinecraftMixin"
+          "LivingEntityMixin"
+        , "CombatRulesMixin"
+        , "MinecraftMixin"
+        , "TieredItemMixin"
+        , "ArmorItemMixin"
+        , "TiersMixin"
+        , "ServerPlayerMixin"
     ],
     "client": [
         "TitleScreenMixin"

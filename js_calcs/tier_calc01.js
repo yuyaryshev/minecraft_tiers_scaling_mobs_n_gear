@@ -7,10 +7,10 @@ const initialTiers = `
     19       2              1              1            3                copper
     25       3              1              2            3                chainmail
     30       2              1              5            3                gold
-    40       4              2              3            7                iron
+    40       4              2              3            10               iron
     45       3              2              4            4                brass
     80       6              4              6            20               diamond
-   120       8              9             12            30               netherite
+   200       8              9             12            30               netherite
 `
   .split("\n")
   .map((s) => s.trim())
@@ -46,13 +46,77 @@ const expectations = {
   "diamond player vs diamond mob": ["p", "5-7", "6-11"],
   "netherite player vs netherite mob": ["p", "5-7", "6-14"],
 
-  "iron player vs diamond mob": ["m", "11-10000", "2-4"],
-  "diamond player vs iron mob": ["p", "0-2", "12-10000"],
+  "iron player vs diamond mob": ["m", "10-10000", "2-4"],
   "copper player vs diamond mob": ["m", "22-10000", "0-2"],
   "diamond player vs copper mob": ["p", "0-1", "12-10000"],
+  "diamond player vs stone mob": ["p", "0-1", "12-10000"],
+
+  "diamond player vs iron mob": ["p", "1-3", "12-10000"],
+  "diamond player vs iron tank": ["p", "2-6", "12-10000"],
+  "diamond player vs iron assassin": ["p", "0-3", "6-10000"],
+  "diamond player vs iron ranged": ["p", "0-3", "8-10000"],
+  "diamond player vs iron elite": ["p", "2-6", "8-10000"],
+  "diamond player vs iron mage": ["p", "0-1", "3-10000"],
+  "diamond player vs iron boss": ["m", "5-30", "5-10"],
+  "diamond player vs copper boss": ["p", "5-30", "15-10000"],
+
+  "diamond player vs diamond tank": ["p", "8-15", "12-30"],
+  "diamond player vs diamond assassin": ["p", "2-4", "3-5"],
+  "diamond player vs diamond ranged": ["p", "5-7", "6-11"],
+  "diamond player vs diamond elite": ["m", "8-12", "3-6"],
+  "diamond player vs diamond mage": ["p", "1-2", "2-3"],
+  "diamond player vs diamond boss": ["m", "50-100", "3-5"],
 };
 
-const maxArmorPiecesCount = 6;
+const mobTypes = {
+  normal: {
+    damageF: 1,
+    hpF: 1,
+    armorF: 1,
+    toughnessF: 1,
+  },
+  assassin: {
+    damageF: 2,
+    hpF: 0.7,
+    armorF: 0.3,
+    toughnessF: 0,
+  },
+  tank: {
+    damageF: 0.7,
+    hpF: 2.0,
+    armorF: 1.2,
+    toughnessF: 1.2,
+  },
+  ranged: {
+    damageF: 1,
+    hpF: 1,
+    armorF: 0.3,
+    toughnessF: 0.1,
+  },
+  mage: {
+    damageF: 3,
+    hpF: 0.4,
+    armorF: 0,
+    toughnessF: 0,
+  },
+  elite: {
+    damageF: 1.4,
+    hpF: 1.7,
+    armorF: 1.1,
+    toughnessF: 1.0,
+  },
+  boss: {
+    damageF: 2,
+    hpF: 10,
+    armorF: 1.2,
+    toughnessF: 1.2,
+  },
+};
+for (let mtypeId in mobTypes) {
+  mobTypes[mtypeId].mtypeId = mtypeId;
+}
+
+const maxArmorPiecesCount = 4;
 const maxArmor =
   initialTiers[initialTiers.length - 1].tierArmor * maxArmorPiecesCount;
 
@@ -236,7 +300,7 @@ function matchesExpectation(r, e, txt) {
   return true;
 }
 
-function battleSimEx(txt, php, pwa, pa, prd, mhp, md, ma, mrd) {
+function battleSimEx(txt, php, pwa, pa, prd, mtypeId, mhp, md, ma, mrd) {
   // console.log(`CODE00010001 Battle sim start.`);
   const pdelta = roundTo1Digit(getDhpReducedByArmor(md, pa, prd));
   const pd = globals.playerBaseDamage + pwa;
@@ -260,6 +324,7 @@ function battleSimEx(txt, php, pwa, pa, prd, mhp, md, ma, mrd) {
     prd,
     pdelta,
     pturns_to_die,
+    mtypeId,
     mhp,
     md,
     ma,
@@ -274,24 +339,34 @@ function battleSimEx(txt, php, pwa, pa, prd, mhp, md, ma, mrd) {
   return r;
 }
 
-function battleSim(ptier, mtier) {
+function battleSim(ptier, mtier, mtype) {
   if (typeof ptier === "string") {
     ptier = tiers.filter((i) => i.tierId === ptier)[0];
   }
   if (typeof mtier === "string") {
     mtier = tiers.filter((i) => i.tierId === mtier)[0];
   }
-  const txt = `${ptier.tierId} player vs ${mtier.tierId} mob`;
+
+  if (typeof mtype === "string") {
+    mtype = mobTypes[mtype] || mobTypes["normal"];
+  }
+  if (!mtype) {
+    mtype = mobTypes["normal"];
+  }
+
+  const txt = `${ptier.tierId} player vs ${mtier.tierId} ${mtype.mtypeId === "normal" ? "mob" : mtype.mtypeId}`;
+
   const r = battleSimEx(
     txt,
     ptier.playerHp,
     ptier.playerWeaponAttack,
     ptier.playerArmor,
     ptier.playerDamageReduction,
-    mtier.mobHp,
-    mtier.mobAvgMeleeDamage,
-    mtier.mobArmor,
-    mtier.mobDamageReduction,
+    mtype.mtypeId,
+    roundTo1Digit(mtier.mobHp * mtype.hpF),
+    roundTo1Digit(mtier.mobAvgMeleeDamage * mtype.damageF),
+    roundTo1Digit(mtier.mobArmor * mtype.armorF),
+    roundTo1Digit(mtier.mobDamageReduction * mtype.toughnessF),
   );
   return r;
 }
@@ -299,10 +374,28 @@ function battleSim(ptier, mtier) {
 const battleLogs = [];
 
 battleLogs.push(...tiers.map((t) => battleSim(t, t)));
+
+battleLogs.push(battleSim("diamond", "diamond", "normal"));
+battleLogs.push(battleSim("diamond", "diamond", "tank"));
+battleLogs.push(battleSim("diamond", "diamond", "assassin"));
+battleLogs.push(battleSim("diamond", "diamond", "elite"));
+battleLogs.push(battleSim("diamond", "diamond", "mage"));
+battleLogs.push(battleSim("diamond", "diamond", "boss"));
+battleLogs.push(battleSim("diamond", "diamond", "boss"));
+
 battleLogs.push(battleSim("iron", "diamond"));
 battleLogs.push(battleSim("diamond", "iron"));
 battleLogs.push(battleSim("copper", "diamond"));
 battleLogs.push(battleSim("diamond", "copper"));
+battleLogs.push(battleSim("diamond", "stone"));
+
+battleLogs.push(battleSim("diamond", "iron", "normal"));
+battleLogs.push(battleSim("diamond", "iron", "tank"));
+battleLogs.push(battleSim("diamond", "iron", "assassin"));
+battleLogs.push(battleSim("diamond", "iron", "elite"));
+battleLogs.push(battleSim("diamond", "iron", "mage"));
+battleLogs.push(battleSim("diamond", "iron", "boss"));
+battleLogs.push(battleSim("diamond", "copper", "boss"));
 
 console.log(`CODE00020001 battleLogs=`);
 console.table(battleLogs);
