@@ -28,3 +28,4 @@ public class ArmorItemMixin {
         UpdateHelper.updateArmorMaterial(armorMaterial);
     }
 }
+// Test comment
